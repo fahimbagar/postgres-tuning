@@ -1,5 +1,8 @@
 # postgres-tuning
 
+[![static analysis](https://github.com/fahimbagar/postgres-tuning/actions/workflows/static-analysis.yml/badge.svg)](https://github.com/fahimbagar/postgres-tuning/actions/workflows/static-analysis.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Reproducible Postgres 18 tuning demos in Go. Each scenario sets up its own
 tables, measures a common mistake, applies the fix, and measures again.
 
