@@ -1,0 +1,41 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  # Run with all default linters enabled and in addition the linters listed below.
+  enable:
+    - bodyclose
+    - errorlint
+    - gosec
+    - makezero
+    - paralleltest
+    - revive
+    - unconvert
+    - unparam
+    - wastedassign
+  settings:
+    gosec:
+      excludes:
+        # math/rand only picks benchmark ids and vectors here; nothing
+        # security-related depends on it.
+        - G404
+    paralleltest:
+      ignore-missing-subtests: true
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - std-error-handling
+
+issues:
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/fahimbagar/postgres-tuning
