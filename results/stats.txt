@@ -1,0 +1,39 @@
+# scenario stats (2026-10-15T19:48:51Z)
+
+== default statistics (each column on its own) ==
+
+city=Jakarta warehouse=SG-WH1: 10 runs p50=583ms max=660ms
+    Limit  (cost=1000.45..7500.27 rows=20 width=22) (actual time=1981.552..1995.984 rows=0.00 loops=1)
+      ->  Gather Merge  (cost=1000.45..101747.54 rows=310 width=22) (actual time=1981.551..1995.982 rows=0.00 loops=1)
+            ->  Parallel Index Scan Backward using st_orders_created_at_idx on st_orders  (cost=0.43..100711.73 rows=129 width=22) (actual time=1978.460..1978.460 rows=0.00 loops=3)
+                  Filter: ((city = 'Jakarta'::text) AND (warehouse = 'SG-WH1'::text))
+                  Rows Removed by Filter: 1000000
+    Execution Time: 1996.004 ms
+
+city=Jakarta warehouse=ID-WH1: 10 runs p50=8.12ms max=10.58ms
+    Limit  (cost=1000.45..7761.91 rows=20 width=22) (actual time=8.396..10.907 rows=20.00 loops=1)
+      ->  Gather Merge  (cost=1000.45..101746.15 rows=298 width=22) (actual time=8.395..10.902 rows=20.00 loops=1)
+            ->  Parallel Index Scan Backward using st_orders_created_at_idx on st_orders  (cost=0.43..100711.73 rows=124 width=22) (actual time=0.080..0.631 rows=14.00 loops=3)
+                  Filter: ((city = 'Jakarta'::text) AND (warehouse = 'ID-WH1'::text))
+                  Rows Removed by Filter: 1348
+    Execution Time: 10.938 ms
+
+== after CREATE STATISTICS ... (mcv) ON city, warehouse ==
+
+city=Jakarta warehouse=SG-WH1: 10 runs p50=31.77ms max=40.87ms
+    Limit  (cost=35891.54..35891.55 rows=1 width=22) (actual time=27.963..27.964 rows=0.00 loops=1)
+      ->  Sort  (cost=35891.54..35891.55 rows=1 width=22) (actual time=27.962..27.963 rows=0.00 loops=1)
+            ->  Bitmap Heap Scan on st_orders  (cost=363.95..35891.53 rows=1 width=22) (actual time=27.958..27.958 rows=0.00 loops=1)
+                  Filter: (warehouse = 'SG-WH1'::text)
+                  Rows Removed by Filter: 29936
+                  ->  Bitmap Index Scan on st_orders_city_idx  (cost=0.00..363.94 rows=33002 width=0) (actual time=3.429..3.430 rows=29936.00 loops=1)
+    Execution Time: 27.985 ms
+
+city=Jakarta warehouse=ID-WH1: 10 runs p50=882µs max=1.12ms
+    Limit  (cost=0.43..77.37 rows=20 width=22) (actual time=0.086..0.917 rows=20.00 loops=1)
+      ->  Index Scan Backward using st_orders_created_at_idx on st_orders  (cost=0.43..126966.57 rows=33002 width=22) (actual time=0.086..0.910 rows=20.00 loops=1)
+            Filter: ((city = 'Jakarta'::text) AND (warehouse = 'ID-WH1'::text))
+            Rows Removed by Filter: 1887
+    Execution Time: 0.938 ms
+
+# done in 10s

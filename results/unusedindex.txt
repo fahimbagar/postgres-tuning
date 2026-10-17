@@ -1,0 +1,25 @@
+# scenario unusedindex (2026-10-15T20:33:02Z)
+
+== primary key + the one index the app uses ==
+insert statements (100 rows each): ops=8822 tps=294 p50=9.81ms p95=24.9ms p99=80.76ms max=217ms
+rows/s: 29407, WAL per row: 280 bytes, table+indexes: 139 MB
+
+== primary key + 7 more: unused, duplicate, prefix-redundant ==
+insert statements (100 rows each): ops=5707 tps=190 p50=16.68ms p95=38.83ms p99=115ms max=268ms
+rows/s: 19023, WAL per row: 870 bytes, table+indexes: 192 MB
+
+== never-scanned indexes ==
+    ui_events ui_events_payload_idx 0 45 MB
+    ui_events ui_events_account_created_idx 0 24 MB
+    ui_events ui_events_account_idx 0 8512 kB
+    ui_events ui_events_kind_created_idx 0 8192 kB
+    ui_events ui_events_lower_kind_idx 0 5160 kB
+    ui_events ui_events_kind_idx 0 5144 kB
+
+== redundant indexes (same or leading columns of another index) ==
+    ui_events_account_idx ui_events_account_created_idx
+    ui_events_account_idx ui_events_account_created_idx2
+    ui_events_account_created_idx2 ui_events_account_created_idx
+    ui_events_kind_idx ui_events_kind_created_idx
+
+# done in 1m4s

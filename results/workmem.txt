@@ -1,0 +1,24 @@
+# scenario workmem (2026-10-15T20:53:17Z)
+
+== one report, default work_mem (4MB) ==
+    Batches: 81  Memory Usage: 8337kB  Disk Usage: 15304kB
+    Buffers: shared hit=3 read=6399, temp read=2082 written=3850
+    Execution Time: 937.760 ms
+5 runs: p50=681ms max=733ms, temp files=5, temp written=74 MiB
+
+== one report, SET LOCAL work_mem = '256MB' in its transaction ==
+    Batches: 1  Memory Usage: 147473kB
+    Execution Time: 618.298 ms
+5 runs: p50=567ms max=608ms, temp files=0, temp written=0 MiB
+
+== 12 concurrent reports, default work_mem ==
+reports: ops=31 tps=1 p50=9.831s p95=14.428s p99=14.531s max=14.619s
+backend memory (cgroup anon): 19 MiB at start, 137 MiB peak seen
+Postgres restarted during the test: no
+
+== 12 concurrent reports, ALTER SYSTEM SET work_mem = '256MB' ==
+reports: ops=1 tps=0 p50=4.15s p95=4.15s p99=4.15s max=4.15s errors=1252 (first: conn closed)
+backend memory (cgroup anon): 21 MiB at start, 1419 MiB peak seen
+Postgres restarted during the test: YES (was up since 20:51:03, now since 20:54:02)
+
+# done in 1m8s

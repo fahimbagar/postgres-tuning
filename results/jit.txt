@@ -1,0 +1,25 @@
+# scenario jit (2026-10-15T19:49:25Z)
+
+== plan cost vs JIT thresholds ==
+VIP report total cost 154996; jit_above_cost=100000 jit_inline_above_cost=500000 jit_optimize_above_cost=500000
+
+== JIT section of EXPLAIN (ANALYZE, VERBOSE), leader and each parallel worker ==
+    JIT:
+    Functions: 10
+    Options: Inlining false, Optimization false, Expressions true, Deforming true
+    Timing: Generation 1.329 ms (Deform 0.564 ms), Inlining 0.000 ms, Optimization 0.803 ms, Emission 16.519 ms, Total 18.651 ms
+    JIT:
+    Functions: 10
+    Options: Inlining false, Optimization false, Expressions true, Deforming true
+    Timing: Generation 1.365 ms (Deform 0.538 ms), Inlining 0.000 ms, Optimization 0.655 ms, Emission 14.073 ms, Total 16.093 ms
+    JIT:
+    Functions: 32
+    Options: Inlining false, Optimization false, Expressions true, Deforming true
+    Timing: Generation 3.585 ms (Deform 1.428 ms), Inlining 0.000 ms, Optimization 3.050 ms, Emission 48.262 ms, Total 54.896 ms
+    Execution Time: 680.280 ms
+
+== VIP report, 7 runs each ==
+jit=on  median=584ms  runs=[569ms 587ms 563ms 585ms 570ms 584ms 596ms]
+jit=off median=555ms  runs=[534ms 555ms 580ms 532ms 627ms 531ms 560ms]
+
+# done in 10s

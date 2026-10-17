@@ -1,0 +1,69 @@
+# scenario hypopg (2026-10-15T20:09:53Z)
+
+== SELECT id, tier FROM customers WHERE email = 'user4242@example.com' ==
+plan now:
+    Gather  (cost=1000.00..16435.43 rows=1 width=16)
+      Workers Planned: 2
+      ->  Parallel Seq Scan on customers  (cost=0.00..15435.33 rows=1 width=16)
+            Filter: (email = 'user4242@example.com'::text)
+
+hypothetical <13640>btree_customers_email (CREATE INDEX ON customers (email)) created in 3.588ms, estimated size 47 MiB
+plan with the hypothetical index (plain EXPLAIN; EXPLAIN ANALYZE ignores it):
+    Index Scan using "<13640>btree_customers_email" on customers  (cost=0.05..8.07 rows=1 width=16)
+      Index Cond: (email = 'user4242@example.com'::text)
+
+real index customers_email_idx built in 6.499s, actual size 38 MiB
+    Index Scan using customers_email_idx on customers (actual time=0.046..0.047 rows=1.00 loops=1)
+      Index Cond: (email = 'user4242@example.com'::text)
+      Index Searches: 1
+      Buffers: shared hit=1 read=3
+      I/O Timings: shared read=0.018
+    Planning:
+      Buffers: shared hit=4 read=1
+      I/O Timings: shared read=0.011
+    Planning Time: 0.154 ms
+    Execution Time: 0.063 ms
+
+== SELECT count(*) FROM customers WHERE tier = 'standard' ==
+plan now:
+    Finalize Aggregate  (cost=17373.33..17373.34 rows=1 width=8)
+      ->  Gather  (cost=17373.11..17373.32 rows=2 width=8)
+            Workers Planned: 2
+            ->  Partial Aggregate  (cost=16373.11..16373.12 rows=1 width=8)
+                  ->  Parallel Seq Scan on customers  (cost=0.00..15435.33 rows=375111 width=0)
+                        Filter: (tier = 'standard'::text)
+
+hypothetical <13640>btree_customers_tier (CREATE INDEX ON customers (tier)) created in 307µs, estimated size 27 MiB
+plan with the hypothetical index (plain EXPLAIN; EXPLAIN ANALYZE ignores it):
+    Finalize Aggregate  (cost=17373.33..17373.34 rows=1 width=8)
+      ->  Gather  (cost=17373.11..17373.32 rows=2 width=8)
+            Workers Planned: 2
+            ->  Partial Aggregate  (cost=16373.11..16373.12 rows=1 width=8)
+                  ->  Parallel Seq Scan on customers  (cost=0.00..15435.33 rows=375111 width=0)
+                        Filter: (tier = 'standard'::text)
+
+real index customers_tier_idx built in 1.206s, actual size 6 MiB
+    Finalize Aggregate (actual time=128.679..131.507 rows=1.00 loops=1)
+      Buffers: shared hit=3 read=773
+      I/O Timings: shared read=9.611
+      ->  Gather (actual time=128.311..131.499 rows=3.00 loops=1)
+            Workers Planned: 2
+            Workers Launched: 2
+            Buffers: shared hit=3 read=773
+            I/O Timings: shared read=9.611
+            ->  Partial Aggregate (actual time=123.615..123.616 rows=1.00 loops=3)
+                  Buffers: shared hit=3 read=773
+                  I/O Timings: shared read=9.611
+                  ->  Parallel Index Only Scan using customers_tier_idx on customers (actual time=0.117..82.217 rows=299949.67 loops=3)
+                        Index Cond: (tier = 'standard'::text)
+                        Heap Fetches: 0
+                        Index Searches: 1
+                        Buffers: shared hit=3 read=773
+                        I/O Timings: shared read=9.611
+    Planning:
+      Buffers: shared hit=4 read=1
+      I/O Timings: shared read=0.020
+    Planning Time: 0.151 ms
+    Execution Time: 131.542 ms
+
+# done in 8s

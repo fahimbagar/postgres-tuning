@@ -1,0 +1,20 @@
+# scenario repack (2026-10-15T20:26:35Z)
+creating rp_vacuum_full: 1500000 rows, then deleting 70% and running plain VACUUM
+creating rp_repack: 1500000 rows, then deleting 70% and running plain VACUUM
+
+== bloat after the delete (pgstattuple, pgstatindex) ==
+rp_vacuum_full  heap   355 MB: live tuples 29.0%, dead  0.0%, free space 69.2%; pkey leaf density 27.2%
+rp_repack       heap   355 MB: live tuples 29.0%, dead  0.0%, free space 69.2%; pkey leaf density 27.2%
+
+== VACUUM FULL rp_vacuum_full, with a writer updating the table ==
+operation took 10.717s; writer: 639 updates, slowest 10.732s, 1 took over 100ms
+
+== pg_repack --no-order -t rp_repack, with the same writer ==
+    INFO: repacking table "public.rp_repack"
+operation took 9.2s; writer: 502 updates, slowest 929ms, 20 took over 100ms
+
+== after ==
+rp_vacuum_full  heap   106 MB: live tuples 96.7%, dead  0.0%, free space  1.4%; pkey leaf density 90.0%
+rp_repack       heap   106 MB: live tuples 96.7%, dead  0.0%, free space  1.4%; pkey leaf density 90.0%
+
+# done in 2m21s

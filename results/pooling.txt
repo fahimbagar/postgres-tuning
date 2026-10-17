@@ -1,0 +1,18 @@
+# scenario pooling (2026-10-15T20:20:32Z)
+
+== direct, pgxpool MaxConns=300 (one connection per client) ==
+ops=211716 tps=7057 p50=19.53ms p95=177ms p99=310ms max=1.152s
+client backends on the server: 301 (174 active at that moment)
+backend memory (cgroup anon): 12 MiB before, 510 MiB peak
+
+== direct, pgxpool MaxConns=8 ==
+ops=372129 tps=12404 p50=21.49ms p95=40.31ms p99=51.86ms max=134ms
+client backends on the server: 9 (1 active at that moment)
+backend memory (cgroup anon): 12 MiB before, 25 MiB peak
+
+== pgbouncer (transaction mode, 16 server connections), pgxpool MaxConns=300 ==
+ops=256597 tps=8553 p50=31.86ms p95=56.52ms p99=68.29ms max=112ms
+client backends on the server: 17 (4 active at that moment)
+backend memory (cgroup anon): 12 MiB before, 37 MiB peak
+
+# done in 1m57s

@@ -1,0 +1,28 @@
+# scenario genericplan (2026-10-15T20:26:20Z)
+
+== pgx default (QueryExecModeCacheStatement) ==
+pg_prepared_statements: stmtcache_3bfa2c723e9d65caddb15c2180bd5fbc4b0570b12bfb3437 generic_plans=3 custom_plans=5
+status=delivered 20 runs: p50=199µs max=275µs
+status=refunded  20 runs: p50=135ms max=1.426s
+generic plan:
+    Limit
+      ->  Index Scan Backward using orders_created_at_idx on orders
+            Filter: (status = $1)
+custom plan for 'refunded':
+    Limit
+      ->  Sort
+            Sort Key: created_at DESC
+            ->  Index Scan using orders_status_idx on orders
+                  Index Cond: (status = 'refunded'::text)
+
+== pgx default + plan_cache_mode=force_custom_plan ==
+pg_prepared_statements: stmtcache_3bfa2c723e9d65caddb15c2180bd5fbc4b0570b12bfb3437 generic_plans=0 custom_plans=8
+status=delivered 20 runs: p50=290µs max=817µs
+status=refunded  20 runs: p50=2.22ms max=256ms
+
+== pgx QueryExecModeExec (unnamed statement) ==
+pg_prepared_statements: none (the driver did not prepare a named statement)
+status=delivered 20 runs: p50=492µs max=1.17ms
+status=refunded  20 runs: p50=1.94ms max=3.84ms
+
+# done in 5s

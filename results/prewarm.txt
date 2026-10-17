@@ -1,0 +1,28 @@
+# scenario prewarm (2026-10-15T20:54:35Z)
+
+== just restarted (2s ago), pg_prewarm.autoprewarm = off ==
+in shared_buffers: customers            0 buffers (0 bytes of 80 MB)
+in shared_buffers: customers_pkey       0 buffers (0 bytes of 21 MB)
+3000 lookups: total 1.595s, p50=566µs p99=1.1ms; blocks read from outside shared_buffers: 4426
+
+== SELECT pg_prewarm('customers'), pg_prewarm('customers_pkey') ==
+loaded 10227 + 2745 blocks in 204ms
+in shared_buffers: customers        10227 buffers (80 MB of 80 MB)
+in shared_buffers: customers_pkey    2745 buffers (21 MB of 21 MB)
+3000 lookups: total 272ms, p50=88µs p99=133µs; blocks read from outside shared_buffers: 0
+
+# done in 2s
+# scenario prewarm (2026-10-15T20:54:45Z)
+
+== pg_prewarm.autoprewarm = on: load the cache, then dump the block list ==
+autoprewarm_dump_now() wrote 65536 blocks to autoprewarm.blocks
+
+# done in 0s
+# scenario prewarm (2026-10-15T20:54:54Z)
+
+== just restarted (2s ago), pg_prewarm.autoprewarm = on ==
+in shared_buffers: customers        10177 buffers (80 MB of 80 MB)
+in shared_buffers: customers_pkey    2745 buffers (21 MB of 21 MB)
+3000 lookups: total 283ms, p50=92µs p99=134µs; blocks read from outside shared_buffers: 24
+
+# done in 0s

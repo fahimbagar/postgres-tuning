@@ -1,0 +1,17 @@
+# scenario fkindex (2026-10-15T20:03:19Z)
+creating fk_customers (100k) and fk_orders (2M, only for customers 1..90000)
+
+== foreign keys without a matching index (whole database) ==
+    fk_orders(customer_id) -> fk_customers, table size 100 MB
+    customers(city_id) -> cities, table size 80 MB
+
+== DELETE 100 parent rows, no index on fk_orders.customer_id ==
+    Trigger for constraint fk_orders_customer_id_fkey: time=17852.328 calls=100
+    Execution Time: 17852.595 ms
+
+== same DELETE after CREATE INDEX ON fk_orders (customer_id) ==
+index build took 1.206s
+    Trigger for constraint fk_orders_customer_id_fkey: time=12.201 calls=100
+    Execution Time: 13.123 ms
+
+# done in 48s

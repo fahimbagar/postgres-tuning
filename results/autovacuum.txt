@@ -1,0 +1,29 @@
+# scenario autovacuum (2026-10-15T20:29:02Z)
+creating av_events with 5000000 rows
+
+== freshly vacuumed ==
+n_live_tup=4999991 n_dead_tup=0 autovacuum triggers at 1000048 dead rows (scale_factor=0.2, max_threshold=100000000); last_autovacuum=never
+    ->  Parallel Index Only Scan using av_events_account_idx on av_events  (cost=0.43..9559.71 rows=211979 width=0) (actual time=0.082..44.670 rows=166670.00 loops=3)
+    Heap Fetches: 0
+    Buffers: shared hit=100004 read=577
+    Execution Time: 96.297 ms
+account range count, mean of 5: 91.9ms
+
+== after updating 10% of rows, then waiting 1m30s ==
+updated 500000 rows
+n_live_tup=4999991 n_dead_tup=500000 autovacuum triggers at 1000048 dead rows (scale_factor=0.2, max_threshold=100000000); last_autovacuum=never
+    ->  Parallel Index Only Scan using av_events_account_idx on av_events  (cost=0.43..24864.75 rows=233179 width=0) (actual time=1.152..428.995 rows=166670.00 loops=3)
+    Heap Fetches: 550010
+    Buffers: shared hit=650222 read=368 dirtied=2211
+    Execution Time: 673.387 ms
+account range count, mean of 5: 328ms
+
+== ALTER TABLE av_events SET (autovacuum_vacuum_scale_factor = 0.01) ==
+n_live_tup=5000000 n_dead_tup=0 autovacuum triggers at 50050 dead rows (scale_factor=0.01, max_threshold=100000000); last_autovacuum=20:32:52
+    ->  Parallel Index Only Scan using av_events_account_idx on av_events  (cost=0.43..9559.71 rows=211979 width=0) (actual time=0.048..37.854 rows=166670.00 loops=3)
+    Heap Fetches: 0
+    Buffers: shared hit=90581
+    Execution Time: 87.824 ms
+account range count, mean of 5: 90.9ms
+
+# done in 3m53s

@@ -1,0 +1,42 @@
+# scenario aio (2026-10-15T20:55:05Z)
+
+== io_method=sync io_workers=3 effective_io_concurrency=16, table 2930 MB ==
+scan 1: 7.727s, 398 MB/s, peak in-flight I/Os 1
+    Buffers: shared hit=342 read=374658
+    I/O Timings: shared read=6613.674
+scan 2: 5.405s, 568 MB/s, peak in-flight I/Os 1
+    Buffers: shared hit=456 read=374544
+    I/O Timings: shared read=4589.327
+scan 3: 5.452s, 564 MB/s, peak in-flight I/Os 0
+    Buffers: shared hit=570 read=374430
+    I/O Timings: shared read=4604.251
+
+# done in 27s
+# scenario aio (2026-10-15T20:55:41Z)
+
+== io_method=worker io_workers=3 effective_io_concurrency=16, table 2930 MB ==
+scan 1: 7.482s, 411 MB/s, peak in-flight I/Os 7
+    Buffers: shared hit=342 read=374658
+    I/O Timings: shared read=4699.177
+scan 2: 6.237s, 493 MB/s, peak in-flight I/Os 7
+    Buffers: shared hit=456 read=374544
+    I/O Timings: shared read=3905.402
+scan 3: 6.236s, 493 MB/s, peak in-flight I/Os 7
+    Buffers: shared hit=570 read=374430
+    I/O Timings: shared read=3819.117
+
+# done in 30s
+# scenario aio (2026-10-15T20:56:22Z)
+
+== io_method=io_uring io_workers=3 effective_io_concurrency=16, table 2930 MB ==
+scan 1: 7.534s, 408 MB/s, peak in-flight I/Os 7
+    Buffers: shared hit=342 read=374658
+    I/O Timings: shared read=4879.017
+scan 2: 5.656s, 543 MB/s, peak in-flight I/Os 7
+    Buffers: shared hit=456 read=374544
+    I/O Timings: shared read=3526.168
+scan 3: 5.534s, 555 MB/s, peak in-flight I/Os 7
+    Buffers: shared hit=570 read=374430
+    I/O Timings: shared read=3488.367
+
+# done in 26s

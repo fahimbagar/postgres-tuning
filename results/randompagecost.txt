@@ -1,0 +1,41 @@
+# scenario randompagecost (2026-10-15T19:52:46Z)
+
+== random_page_cost = 4 ==
+    Finalize GroupAggregate  (cost=183965.82..183966.75 rows=3 width=48)
+      Group Key: c.tier
+      ->  Gather Merge  (cost=183965.82..183966.64 rows=7 width=48)
+            Workers Planned: 2
+            ->  Sort  (cost=182965.80..182965.81 rows=3 width=48)
+                  Sort Key: c.tier
+                  ->  Partial HashAggregate  (cost=182965.74..182965.78 rows=3 width=48)
+                        Group Key: c.tier
+                        ->  Parallel Hash Join  (cost=16116.07..182006.36 rows=127917 width=14)
+                              Hash Cond: (o.customer_id = c.id)
+                              ->  Parallel Seq Scan on orders o  (cost=0.00..154952.73 rows=4166673 width=14)
+                              ->  Parallel Hash  (cost=15956.17..15956.17 rows=12792 width=16)
+                                    ->  Parallel Seq Scan on customers c  (cost=0.00..15956.17 rows=12792 width=16)
+                                          Filter: (city_id = ANY ('{7,8,9}'::integer[]))
+    JIT:
+      Functions: 18
+      Options: Inlining false, Optimization false, Expressions true, Deforming true
+
+== random_page_cost = 1.1 ==
+    Finalize GroupAggregate  (cost=84468.71..84469.63 rows=3 width=48)
+      Group Key: c.tier
+      ->  Gather Merge  (cost=84468.71..84469.52 rows=7 width=48)
+            Workers Planned: 2
+            ->  Sort  (cost=83468.68..83468.69 rows=3 width=48)
+                  Sort Key: c.tier
+                  ->  Partial HashAggregate  (cost=83468.62..83468.66 rows=3 width=48)
+                        Group Key: c.tier
+                        ->  Nested Loop  (cost=0.43..82509.24 rows=127917 width=14)
+                              ->  Parallel Seq Scan on customers c  (cost=0.00..15956.17 rows=12792 width=16)
+                                    Filter: (city_id = ANY ('{7,8,9}'::integer[]))
+                              ->  Index Scan using orders_customer_id_idx on orders o  (cost=0.43..5.09 rows=11 width=14)
+                                    Index Cond: (customer_id = c.id)
+
+== regional report, 5 warm runs each ==
+random_page_cost=4    median=2.228s  runs=[2.228s 2.337s 2.217s 2.23s 2.162s]
+random_page_cost=1.1  median=1.252s  runs=[1.227s 1.252s 1.369s 1.3s 1.215s]
+
+# done in 21s

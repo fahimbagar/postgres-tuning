@@ -1,0 +1,19 @@
+# scenario autoexplain (2026-10-15T20:09:45Z)
+
+== app traffic through pgx (prepared statement), then one slow call ==
+auto_explain notices: 1
+    duration: 2939.191 ms  plan:
+    Query Text: SELECT id, customer_id, total, created_at FROM orders
+    WHERE status = $1 ORDER BY created_at DESC LIMIT 50
+    Query Parameters: $1 = 'refunded'
+    Limit  (cost=0.43..10.38 rows=50 width=30) (actual rows=50.00 loops=1)
+      Buffers: shared hit=47 read=7225
+      I/O Timings: shared read=2712.179
+      ->  Index Scan Backward using orders_created_at_idx on orders  (cost=0.43..397977.72 rows=2000003 width=30) (actual rows=50.00 loops=1)
+            Filter: (status = $1)
+            Rows Removed by Filter: 516889
+            Index Searches: 1
+            Buffers: shared hit=47 read=7225
+            I/O Timings: shared read=2712.179
+
+# done in 3s

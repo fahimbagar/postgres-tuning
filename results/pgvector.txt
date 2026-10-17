@@ -1,0 +1,17 @@
+# scenario pgvector (2026-10-15T20:15:27Z)
+pgvector 0.8.7; creating items: 100000 128-d vectors around 100 cluster centres, 50 categories
+HNSW index (m=16, ef_construction=64) built in 21s, 79 MB
+
+== unfiltered top-10: recall vs hnsw.ef_search ==
+    exact (seq scan): p50=66.77ms
+    ef_search=10  recall@10=0.912 p50=732µs
+    ef_search=40  recall@10=0.930 p50=1.01ms
+    ef_search=100 recall@10=0.934 p50=1.33ms
+    ef_search=200 recall@10=0.934 p50=1.62ms
+
+== filtered top-10 (WHERE category = $2, 2% of rows), ef_search = 40 ==
+    iterative_scan=off           rows returned per query=0.7 recall@10=0.062 p50=993µs
+    iterative_scan=relaxed_order rows returned per query=10.0 recall@10=0.926 p50=2.55ms
+    exact (seq scan):            p50=16.21ms
+
+# done in 31s

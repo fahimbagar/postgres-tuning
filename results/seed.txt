@@ -1,0 +1,13 @@
+# scenario seed (2026-10-15T19:25:45Z)
+drop old tables      0s
+create tables        0s
+insert cities        0s
+insert 1M customers  12.6s
+insert 10M orders    1m31.8s
+add foreign key      19.1s
+create indexes       1m31.8s
+vacuum analyze       1m30.2s
+customers  101 MB (with indexes)
+orders     1469 MB (with indexes)
+
+# done in 5m6s

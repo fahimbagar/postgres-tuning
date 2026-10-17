@@ -1,0 +1,34 @@
+# scenario idletx (2026-10-15T19:59:06Z)
+
+== healthy: reserve() with defer tx.Rollback ==
+reserve(sku=1): out of stock; pool connections still acquired afterwards: 0 of 4
+stock sync, first 15s: ops=21514 tps=1434 p50=2.36ms p95=5.24ms p99=8.47ms max=33.29ms
+stock sync, last  30s: ops=45376 tps=1513 p50=2.32ms p95=4.66ms p99=7.65ms max=41.03ms
+idle-in-transaction sessions from shop-api: 0
+VACUUM (VERBOSE):
+    tuples: 584 removed, 10000 remain, 0 are dead but not yet removable
+    removable cutoff: 67706, which was 0 XIDs old when operation ended
+it_stock size (10,000 rows): 1056 kB
+
+== leak: reserveLeaky() hits the out-of-stock path once ==
+reserveLeaky(sku=1): out of stock; pool connections still acquired afterwards: 1 of 4
+stock sync, first 15s: ops=22654 tps=1510 p50=2.26ms p95=5ms p99=8.52ms max=28.92ms
+stock sync, last  30s: ops=45111 tps=1504 p50=2.28ms p95=5.03ms p99=8.56ms max=52.42ms
+idle-in-transaction sessions from shop-api: 1
+    pid=5150 state=idle in transaction xact_age=00:00:45 query=SELECT qty FROM it_stock WHERE sku = $1 FOR UPDATE
+VACUUM (VERBOSE):
+    tuples: 0 removed, 77773 remain, 67773 are dead but not yet removable
+    removable cutoff: 67710, which was 67775 XIDs old when operation ended
+it_stock size (10,000 rows): 4296 kB
+
+== leak + idle_in_transaction_session_timeout = 5s ==
+reserveLeaky(sku=1): out of stock; pool connections still acquired afterwards: 1 of 4
+stock sync, first 15s: ops=21784 tps=1452 p50=2.27ms p95=5.65ms p99=8.8ms max=28.61ms
+stock sync, last  30s: ops=17179 tps=573 p50=6.69ms p95=11.14ms p99=15.67ms max=57.9ms
+idle-in-transaction sessions from shop-api: 0
+VACUUM (VERBOSE):
+    tuples: 3814 removed, 10000 remain, 0 are dead but not yet removable
+    removable cutoff: 174462, which was 0 XIDs old when operation ended
+it_stock size (10,000 rows): 1320 kB
+
+# done in 2m16s
