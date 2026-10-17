@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgbouncer
+data:
+  pgbouncer.ini: |
+    [databases]
+    * = host=postgres port=5432
+
+    [pgbouncer]
+    listen_addr = 0.0.0.0
+    listen_port = 6432
+    unix_socket_dir =
+    auth_type = scram-sha-256
+    auth_file = /etc/pgbouncer/userlist.txt
+    pool_mode = transaction
+    max_client_conn = 1000
+    default_pool_size = 16
+    # pgx prepares every statement by default, which transaction pooling
+    # only supports with this on. 200 is the default since PgBouncer 1.24;
+    # it is spelled out because 1.21-1.23 default to 0 (off).
+    max_prepared_statements = 200
+  userlist.txt: |
+    "postgres" "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer
+spec:
+  selector:
+    app: pgbouncer
+  ports:
+    - port: 6432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+    spec:
+      securityContext:
+        # pgbouncer refuses to run as root; 999 is the postgres user in the image.
+        runAsUser: 999
+      containers:
+        - name: pgbouncer
+          image: pgtune:dev
+          imagePullPolicy: Never
+          command: ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+          ports:
+            - containerPort: 6432
+          resources:
+            requests:
+              cpu: 500m
+              memory: 64Mi
+            limits:
+              cpu: "1"
+              memory: 128Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/pgbouncer
+      volumes:
+        - name: config
+          configMap:
+            name: pgbouncer

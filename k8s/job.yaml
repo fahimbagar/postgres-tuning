@@ -1,0 +1,38 @@
+# Template used by the Makefile; __NAME__ and __ARGS__ are filled in by sed.
+# The load generator runs inside the cluster on purpose: kubectl port-forward
+# adds its own latency and would show up in every p99.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: __NAME__
+  labels:
+    app: scenario
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: scenario
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: scenario
+          image: pgtune:dev
+          imagePullPolicy: Never
+          command: ["sh", "-c", "scenario __ARGS__"]
+          env:
+            - name: PGHOST
+              value: postgres
+            - name: PGUSER
+              value: postgres
+            - name: PGPASSWORD
+              value: postgres
+            - name: PGDATABASE
+              value: postgres
+          resources:
+            requests:
+              cpu: "1"
+              memory: 256Mi
+            limits:
+              cpu: 1500m
+              memory: 1Gi
