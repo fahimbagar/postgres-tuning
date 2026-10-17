@@ -37,11 +37,13 @@ FROM customers c JOIN orders o ON o.customer_id = c.id
 WHERE c.tier = 'vip' GROUP BY c.tier`
 
 func measure(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("measure", flag.ExitOnError)
+	fs := flag.NewFlagSet("measure", flag.ContinueOnError)
 	workers := fs.Int("workers", 8, "concurrent OLTP sessions")
 	dur := fs.Duration("duration", 60*time.Second, "how long to run the workload")
 	reportEvery := fs.Duration("report-every", 5*time.Second, "how often the report query runs")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	pool, err := pg.Pool(ctx, nil)
 	if err != nil {
@@ -152,10 +154,10 @@ func printTopStatements(ctx context.Context, q pg.Querier, orderBy string, limit
 	return rows.Err()
 }
 
-func oneLine(s string, max int) string {
+func oneLine(s string, limit int) string {
 	s = strings.Join(strings.Fields(s), " ")
-	if len(s) > max {
-		return s[:max-3] + "..."
+	if len(s) > limit {
+		return s[:limit-3] + "..."
 	}
 	return s
 }

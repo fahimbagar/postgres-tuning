@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -36,7 +37,7 @@ ORDER BY pg_relation_size(c.conrelid) DESC`
 // Cleaning up 100 accounts that never ordered anything.
 const deleteInactive = `DELETE FROM fk_customers WHERE id BETWEEN 90001 AND 90100`
 
-func fkIndex(ctx context.Context, args []string) error {
+func fkIndex(ctx context.Context, _ []string) error {
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {
 		return err
@@ -90,7 +91,8 @@ func fkDelete(ctx context.Context, conn *pgx.Conn) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	// The rollback is the point: both runs must delete the same rows.
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	plan, err := pg.Explain(ctx, tx, "ANALYZE, COSTS OFF", deleteInactive)
 	if err != nil {

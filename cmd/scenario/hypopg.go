@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -23,7 +24,7 @@ var hypoCases = []struct {
 		`CREATE INDEX ON customers (tier)`},
 }
 
-func hypopg(ctx context.Context, args []string) error {
+func hypopg(ctx context.Context, _ []string) error {
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {
 		return err

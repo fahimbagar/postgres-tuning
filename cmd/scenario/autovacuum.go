@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -19,11 +20,13 @@ func init() {
 const accountRange = `SELECT count(*) FROM av_events WHERE account_id BETWEEN 1000 AND 51000`
 
 func autovacuum(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("autovacuum", flag.ExitOnError)
+	fs := flag.NewFlagSet("autovacuum", flag.ContinueOnError)
 	rows := fs.Int("rows", 5_000_000, "table size")
 	updatePct := fs.Int("update-pct", 10, "percent of rows to update")
 	wait := fs.Duration("wait", 90*time.Second, "how long to give autovacuum (autovacuum_naptime is 1min)")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {

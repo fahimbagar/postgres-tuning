@@ -7,10 +7,11 @@ import (
 	"math/rand/v2"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/bench"
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/fahimbagar/postgres-tuning/internal/bench"
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -18,24 +19,34 @@ func init() {
 }
 
 func pooling(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("pooling", flag.ExitOnError)
+	fs := flag.NewFlagSet("pooling", flag.ContinueOnError)
 	clients := fs.Int("clients", 300, "concurrent goroutines issuing queries")
 	small := fs.Int("small-pool", 8, "pool size for the sized-pool run")
 	dur := fs.Duration("duration", 30*time.Second, "length of each run")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	bigPool, err := pg.MaxConns(*clients)
+	if err != nil {
+		return err
+	}
+	smallPool, err := pg.MaxConns(*small)
+	if err != nil {
+		return err
+	}
 
 	runs := []struct {
 		name  string
 		tweak func(*pgxpool.Config)
 	}{
 		{fmt.Sprintf("direct, pgxpool MaxConns=%d (one connection per client)", *clients), func(c *pgxpool.Config) {
-			c.MaxConns = int32(*clients)
+			c.MaxConns = bigPool
 		}},
 		{fmt.Sprintf("direct, pgxpool MaxConns=%d", *small), func(c *pgxpool.Config) {
-			c.MaxConns = int32(*small)
+			c.MaxConns = smallPool
 		}},
 		{fmt.Sprintf("pgbouncer (transaction mode, 16 server connections), pgxpool MaxConns=%d", *clients), func(c *pgxpool.Config) {
-			c.MaxConns = int32(*clients)
+			c.MaxConns = bigPool
 			c.ConnConfig.Host, c.ConnConfig.Port = "pgbouncer", 6432
 			// With libpq's default sslmode=prefer, pgx adds a non-TLS
 			// fallback that keeps the host from PGHOST. PgBouncer here has no
@@ -94,7 +105,7 @@ func poolingRun(ctx context.Context, monitor *pgx.Conn, tweak func(*pgxpool.Conf
 			fmt.Println("pg_stat_activity:", err)
 			return
 		}
-		defer conn.Close(context.Background())
+		defer func() { _ = conn.Close(ctx) }()
 		err = conn.QueryRow(ctx, `SELECT count(*), count(*) FILTER (WHERE state = 'active')
 			FROM pg_stat_activity WHERE backend_type = 'client backend' AND pid <> pg_backend_pid()`).
 			Scan(&a.total, &a.active)

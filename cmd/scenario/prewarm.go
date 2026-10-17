@@ -7,9 +7,10 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/fahimbagar/postgres-tuning/internal/bench"
 	"github.com/fahimbagar/postgres-tuning/internal/pg"
-	"github.com/jackc/pgx/v5"
 )
 
 func init() {
@@ -22,10 +23,12 @@ func init() {
 //	dump:   autoprewarm on. Load the cache and write the block list to disk.
 //	auto:   right after the next restart, see what autoprewarm brought back.
 func prewarm(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("prewarm", flag.ExitOnError)
+	fs := flag.NewFlagSet("prewarm", flag.ContinueOnError)
 	phase := fs.String("phase", "manual", "manual | dump | auto")
 	lookups := fs.Int("lookups", 3000, "random primary key lookups per measurement")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {

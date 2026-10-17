@@ -29,7 +29,7 @@ var countries = map[string][]string{
 	"JP": {"Tokyo", "Osaka", "Nagoya", "Sapporo", "Fukuoka", "Kobe", "Kyoto", "Sendai", "Hiroshima", "Yokohama"},
 }
 
-func seed(ctx context.Context, args []string) error {
+func seed(ctx context.Context, _ []string) error {
 	pool, err := pg.Pool(ctx, nil)
 	if err != nil {
 		return err

@@ -11,10 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/bench"
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/fahimbagar/postgres-tuning/internal/bench"
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -22,9 +23,11 @@ func init() {
 }
 
 func repack(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("repack", flag.ExitOnError)
+	fs := flag.NewFlagSet("repack", flag.ContinueOnError)
 	rows := fs.Int("rows", 1_500_000, "rows per table before the delete")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	pool, err := pg.Pool(ctx, func(c *pgxpool.Config) { c.MaxConns = 4 })
 	if err != nil {

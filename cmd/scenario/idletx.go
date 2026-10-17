@@ -9,11 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/bench"
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/fahimbagar/postgres-tuning/internal/bench"
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -43,14 +44,15 @@ func reserveLeaky(ctx context.Context, pool *pgxpool.Pool, sku int) error {
 	return tx.Commit(ctx)
 }
 
-// reserve is the fix. Rollback after a successful Commit is a no-op, so the
-// deferred call covers every early return.
+// reserve is the fix. Rollback after a successful Commit is a no-op (it
+// returns pgx.ErrTxClosed, which is safe to ignore), so the deferred call
+// covers every early return.
 func reserve(ctx context.Context, pool *pgxpool.Pool, sku int) error {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	var qty int
 	if err := tx.QueryRow(ctx, `SELECT qty FROM it_stock WHERE sku = $1 FOR UPDATE`, sku).Scan(&qty); err != nil {
@@ -66,9 +68,11 @@ func reserve(ctx context.Context, pool *pgxpool.Pool, sku int) error {
 }
 
 func idleTx(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("idletx", flag.ExitOnError)
+	fs := flag.NewFlagSet("idletx", flag.ContinueOnError)
 	dur := fs.Duration("duration", 45*time.Second, "churn time per phase")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	phases := []struct {
 		name    string

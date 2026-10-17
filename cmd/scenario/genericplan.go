@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/fahimbagar/postgres-tuning/internal/bench"
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/fahimbagar/postgres-tuning/internal/bench"
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -19,7 +20,7 @@ func init() {
 const latestByStatus = `SELECT id, customer_id, total, created_at FROM orders
 WHERE status = $1 ORDER BY created_at DESC LIMIT 50`
 
-func genericPlan(ctx context.Context, args []string) error {
+func genericPlan(ctx context.Context, _ []string) error {
 	setups := []struct {
 		name  string
 		tweak func(*pgxpool.Config)

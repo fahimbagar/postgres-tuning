@@ -5,6 +5,7 @@ package pg
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
@@ -38,6 +39,14 @@ func Pool(ctx context.Context, tweak func(*pgxpool.Config)) (*pgxpool.Pool, erro
 		return nil, err
 	}
 	return pool, nil
+}
+
+// MaxConns converts a pool size from a flag to pgxpool's int32 field.
+func MaxConns(n int) (int32, error) {
+	if n < 1 || n > math.MaxInt32 {
+		return 0, fmt.Errorf("pool size %d out of range", n)
+	}
+	return int32(n), nil
 }
 
 // Explain runs EXPLAIN with the given options, e.g. "ANALYZE, BUFFERS".

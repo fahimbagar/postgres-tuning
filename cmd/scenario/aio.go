@@ -7,8 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -18,10 +19,12 @@ func init() {
 // io_method only changes at server start, so `make aio` sets it with ALTER
 // SYSTEM, restarts the pod, and runs this once per value.
 func aio(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("aio", flag.ExitOnError)
+	fs := flag.NewFlagSet("aio", flag.ContinueOnError)
 	rows := fs.Int("rows", 3_000_000, "rows of ~1kB each; must be well over the pod's 2GiB memory")
 	runs := fs.Int("runs", 3, "scans to time")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {

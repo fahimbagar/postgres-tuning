@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/fahimbagar/postgres-tuning/internal/bench"
 	"github.com/fahimbagar/postgres-tuning/internal/pg"
-	"github.com/jackc/pgx/v5"
 )
 
 func init() {
@@ -22,9 +23,11 @@ FROM customers c JOIN orders o ON o.customer_id = c.id
 WHERE c.city_id IN (7, 8, 9) GROUP BY c.tier`
 
 func randomPageCost(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("randompagecost", flag.ExitOnError)
+	fs := flag.NewFlagSet("randompagecost", flag.ContinueOnError)
 	runs := fs.Int("runs", 5, "runs per setting; settings alternate so cache warmth is shared")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {

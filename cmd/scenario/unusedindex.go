@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/bench"
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/fahimbagar/postgres-tuning/internal/bench"
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -41,12 +42,19 @@ WHERE a.indrelid = 'ui_events'::regclass
        OR (b.indkey::text = a.indkey::text AND a.indexrelid > b.indexrelid))`
 
 func unusedIndex(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("unusedindex", flag.ExitOnError)
+	fs := flag.NewFlagSet("unusedindex", flag.ContinueOnError)
 	workers := fs.Int("workers", 4, "concurrent inserting sessions")
 	dur := fs.Duration("duration", 30*time.Second, "insert time per setup")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
-	pool, err := pg.Pool(ctx, func(c *pgxpool.Config) { c.MaxConns = int32(*workers) + 1 })
+	// One extra connection for the stats queries between runs.
+	maxConns, err := pg.MaxConns(*workers + 1)
+	if err != nil {
+		return err
+	}
+	pool, err := pg.Pool(ctx, func(c *pgxpool.Config) { c.MaxConns = maxConns })
 	if err != nil {
 		return err
 	}

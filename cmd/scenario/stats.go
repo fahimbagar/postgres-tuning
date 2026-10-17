@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fahimbagar/postgres-tuning/internal/bench"
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/fahimbagar/postgres-tuning/internal/bench"
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -21,7 +22,7 @@ func init() {
 const ordersForPair = `SELECT id, total, created_at FROM st_orders
 WHERE city = $1 AND warehouse = $2 ORDER BY created_at DESC LIMIT 20`
 
-func stats(ctx context.Context, args []string) error {
+func stats(ctx context.Context, _ []string) error {
 	// QueryExecModeExec plans every call with the real parameter values, so
 	// the generic-plan behaviour from the genericplan scenario can't mix in.
 	pool, err := pg.Pool(ctx, func(c *pgxpool.Config) {

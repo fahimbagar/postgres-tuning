@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
+
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -16,9 +17,11 @@ func init() {
 }
 
 func jit(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("jit", flag.ExitOnError)
+	fs := flag.NewFlagSet("jit", flag.ContinueOnError)
 	runs := fs.Int("runs", 7, "runs per setting, alternating")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {

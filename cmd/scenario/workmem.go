@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fahimbagar/postgres-tuning/internal/bench"
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/fahimbagar/postgres-tuning/internal/bench"
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -25,11 +26,13 @@ FROM orders WHERE created_at >= '2026-08-28'
 GROUP BY customer_id ORDER BY sum(total) DESC LIMIT 20`
 
 func workMem(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("workmem", flag.ExitOnError)
+	fs := flag.NewFlagSet("workmem", flag.ContinueOnError)
 	big := fs.String("big", "256MB", "the 'just raise it' value")
 	concurrency := fs.Int("concurrency", 12, "reports running at once in the server-wide test")
 	dur := fs.Duration("duration", 30*time.Second, "length of each concurrency test")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	pool, err := pg.Pool(ctx, nil)
 	if err != nil {
@@ -149,8 +152,12 @@ func tempStats(ctx context.Context, q pg.Querier) (temp, error) {
 }
 
 func concurrentReports(ctx context.Context, n int, d time.Duration) error {
+	maxConns, err := pg.MaxConns(n)
+	if err != nil {
+		return err
+	}
 	// Fresh pool so every session starts with the server's current settings.
-	pool, err := pg.Pool(ctx, func(c *pgxpool.Config) { c.MaxConns = int32(n) })
+	pool, err := pg.Pool(ctx, func(c *pgxpool.Config) { c.MaxConns = maxConns })
 	if err != nil {
 		return err
 	}
@@ -207,7 +214,8 @@ func waitForServer(ctx context.Context) (time.Time, error) {
 		conn, err := pgx.Connect(ctx, "")
 		if err == nil {
 			err = conn.QueryRow(ctx, "SELECT pg_postmaster_start_time()").Scan(&t)
-			conn.Close(context.Background())
+			// The server may be going down again; a failed close changes nothing.
+			_ = conn.Close(context.Background())
 			if err == nil {
 				return t, nil
 			}

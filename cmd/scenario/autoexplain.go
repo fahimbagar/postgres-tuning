@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fahimbagar/postgres-tuning/internal/pg"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/fahimbagar/postgres-tuning/internal/pg"
 )
 
 func init() {
@@ -18,7 +19,7 @@ func init() {
 // A manual EXPLAIN with a literal value shows the good custom plan, so it
 // can't explain why the app is slow. auto_explain logs the plan the slow
 // execution really used.
-func autoExplain(ctx context.Context, args []string) error {
+func autoExplain(ctx context.Context, _ []string) error {
 	var notices []string
 	cfg, err := pgx.ParseConfig("")
 	if err != nil {

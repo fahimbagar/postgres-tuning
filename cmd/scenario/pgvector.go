@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/fahimbagar/postgres-tuning/internal/bench"
 	"github.com/fahimbagar/postgres-tuning/internal/pg"
-	"github.com/jackc/pgx/v5"
 )
 
 func init() {
@@ -23,11 +24,13 @@ const (
 )
 
 func pgvector(ctx context.Context, args []string) error {
-	fs := flag.NewFlagSet("pgvector", flag.ExitOnError)
+	fs := flag.NewFlagSet("pgvector", flag.ContinueOnError)
 	nrows := fs.Int("rows", 100_000, "vectors in the table")
 	dim := fs.Int("dim", 128, "vector dimensions")
 	queries := fs.Int("queries", 50, "query vectors per measurement")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	conn, err := pgx.Connect(ctx, "")
 	if err != nil {
